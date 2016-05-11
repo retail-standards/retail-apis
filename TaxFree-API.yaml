@@ -1,0 +1,813 @@
+swagger: '2.0'
+info:
+  version: '0.2'
+  title: Tax free API
+  description: All operations needed to process and administer the tax free functionality for a customer. This integration is typically integrated with tax free services such as GlobalBlue.
+paths:
+  /taxfree/authentication:
+    post:
+      summary: Creates an authentication token
+      description: Creates an authentication token
+      parameters:
+        - name: AuthenticationData
+          in: body
+          description: Object containing authentication data
+          required: true
+          schema:
+            $ref: '#/definitions/AuthenticationDto'
+      tags:
+        - Authentication
+      consumes:
+        - application/json
+        - text/json
+      produces:
+        - application/json
+        - text/json
+      responses:
+        '200':
+          description: 'OK, token created'
+          schema:
+            $ref: '#/definitions/AuthenticationResponseDto'
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication error
+        '500':
+          description: Other error
+  /taxfree/configuration:
+    get:
+      summary: 'Gets basic configuration providing allowed countries and card ranges, as well as blacklist countriecard ranges'
+      description: Basic configuration data for a shop
+      parameters:
+        - name: token
+          in: header
+          description: Authentication token
+          required: true
+          type: string
+      tags:
+        - Configuration
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+      responses:
+        '200':
+          description: Configuration information
+          schema:
+            $ref: '#/definitions/ConfigurationDto'
+        '401':
+          description: Authentication error
+        '500':
+          description: Other error
+  /taxfree/traveller/{identifier}:
+    get:
+      summary: Gets the registered traveller information
+      description: Traveller information details
+      parameters:
+        - name: token
+          in: header
+          description: Encrypted authentication string
+          required: true
+          type: string
+        - name: identifier
+          in: path
+          description: Traveller identifier in GB system
+          required: true
+          type: string
+      tags:
+        - Traveller
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+      responses:
+        '200':
+          description: Traveller details information
+          schema:
+            $ref: '#/definitions/TravellerResponseDto'
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication error
+        '404':
+          description:  Traveller not found
+        '500':
+          description: Other error
+  /taxfree/cheque/rendered:
+    post:
+      summary: Creates a rendered cheque document with purchase details and traveller information provided
+      description: Creates a rendered cheque document
+      parameters:
+        - name: token
+          in: header
+          description: Authentication token
+          required: true
+          type: string
+        - name: IssueChequeRequest
+          in: body
+          description: Request with purchase details and traveller information
+          required: true
+          schema:
+            $ref: '#/definitions/CreateChequeDto'
+      tags:
+        - Cheque
+      consumes:
+        - application/json
+        - text/json
+      produces:
+        - application/json
+        - text/json
+      responses:
+        '200':
+          description: Successfully rendered cheque details with print buffer
+          schema:
+            $ref: '#/definitions/RenderedChequeDto'
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication error
+        '500':
+          description: Other error
+  /taxfree/cheque:
+    post:
+      summary: Creates a cheque document with purchase details and traveller information provided
+      description: Creates a cheque document
+      parameters:
+        - name: token
+          in: header
+          description: Authentication token
+          required: true
+          type: string
+        - name: issueChequeRequest
+          in: body
+          description: Request with purchase details and traveller information
+          required: true
+          schema:
+            $ref: '#/definitions/CreateChequeDto'
+      tags:
+        - Cheque
+      consumes:
+        - application/json
+        - text/json
+      produces:
+        - application/json
+        - text/json
+      responses:
+        '200':
+          description: Successfully rendered cheque details with print buffer
+          schema:
+            $ref: '#/definitions/RenderedChequeDto'
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication error
+        '500':
+          description: Other error
+    delete:
+      summary: Voids cheque basing on the cheque cheque data provided in the request
+      description: Voids cheque
+      parameters:
+        - name: token
+          in: header
+          description: Authentication token
+          required: true
+          type: string
+        - name: VoidChequeRequest
+          in: body
+          description: Request containing data of a cheque to bo voided
+          required: true
+          schema:
+            $ref: '#/definitions/VoidChequeRequestDto'
+      tags:
+        - Cheque
+      produces:
+        - application/json
+        - text/json
+      responses:
+        200:
+          description: Successfull void result
+        400:
+          description: Validation error
+        401:
+          description: Authentication error
+        404:
+          description: Cheque not found
+        500:
+          description: Other error          
+  /taxfree/cheque/rendered/{chequeID}:
+    put:
+      summary: Recreates rendered cheque basing on the cheque number and total gross amount of a purchase for which the         cheque was created
+      description: Recreates rendered cheque
+      parameters:
+        - name: token
+          in: header
+          description: Authentication token
+          required: true
+          type: string
+        - name: chequeID
+          in: path
+          description: Numeric document identifier of original cheque
+          required: true
+          type: string
+        - name: totalGrossAmount
+          in: query
+          description: Total gross amount of purchased items for
+          required: true
+          type: number
+          format: double
+      tags:
+        - Cheque
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+      responses:
+        '200':
+          description: Successfully rerendered cheque details with print buffer
+          schema:
+            $ref: '#/definitions/RenderedChequeDto'
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication error
+        '404':
+          description: Cheque not found
+        '500':
+          description: Other error
+  /taxfree/cheque/rendered/consolidate:
+    post:
+      summary: Consolidates one or more generated cheques into one
+      description: Consolidates one or more generated cheques into one
+      parameters:
+        - name: token
+          in: header
+          description: Authentication token
+          required: true
+          type: string
+        - name: ConsolidateChequesRequest
+          in: body
+          description: Request with the list of cheques numbers
+          required: true
+          schema:
+            $ref: '#/definitions/ConsolidateChequesDto'
+      tags:
+        - Cheque
+      consumes:
+        - application/json
+        - text/json
+      produces:
+        - application/json
+        - text/json
+      responses:
+        '200':
+          description: Successfull consolidation result
+          schema:
+            $ref: '#/definitions/RenderedChequeDto'
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication error
+        '500':
+          description: Other error
+definitions:
+  AuthenticationResponseDto:
+    type: object
+    description: Contains generated token and related data
+    allOf:
+    - $ref: '#/definitions/BaseResponseDto'
+    properties:
+      Token:
+        type: string
+        description: Generated authentication token
+      TokenType:
+        type: string
+        description: Type of the generated token
+      ExpiresInSecods:
+        type: integer
+        format: int32
+        description: Number of secods before the token expires
+  AuthenticationDto:
+    type: object
+    description: 'Contains data for the shop, desk, countryCode, userName and password for tax refund acount'
+    properties:
+      ShopID:
+        type: string
+        description: ID of the shop
+      DeskID:
+        type: string
+        description: ID of the desk
+      ShopCountryCode:
+        type: string
+        description: Country code of the shop
+      UserName:
+        type: string
+        description: Username for tax refund account
+      Password:
+        type: string
+        description: Password for tax refund account - encrypted
+      RetailerTerminalID:
+        type: string
+        description:  Optional terminal ID issued by a retailer
+  ConfigurationDto:
+    type: object
+    description:  Contains configuration data for the shop and desk
+    allOf:
+    - $ref: '#/definitions/BaseResponseDto'
+    properties:
+      Countries:
+        type: array
+        description: List of country codes used in GB system
+        items:
+          $ref: '#/definitions/CountryDto'
+      CardRanges:
+        type: array
+        description: List of GB card ranges
+        items:
+          $ref: '#/definitions/CardRangeDto'
+      BlockedCountriesCodes:
+        type: array
+        description: List of countries not eligible for tax refund
+        items:
+          type: string
+      BlockedCardRanges:
+        type: array
+        description: Black list of card ranges
+        items:
+          $ref: '#/definitions/BlockedCardRangeDto'
+      RefundServices:
+        type: array
+        description: List of refund services
+        items:
+          $ref: '#/definitions/RefundServiceDto'
+  CountryDto:
+    type: object
+    properties:
+      Name:
+        type: string
+        description: Country name
+      CountryCode:
+        type: string
+        description: Country code
+      PhonePrefix:
+        type: integer
+        format: int32
+        description: Phone prefix
+      PassportCode:
+        type: string
+        description: Passport code
+  CardRangeDto:
+    type: object
+    properties:
+      IINFrom:
+        type: string
+        description: Start of the numeric prefix (IIN)
+      IINTo:
+        type: string
+        description: End of the numeric prexix (IIN)
+      Identifier:
+        type: boolean
+        description: Represents if the card is accepted as a valid identifier for AutoFill to issue a TFS form
+      RefundTarget:
+        type: boolean
+        description: Represents if this card can be used as refund target for crediting the refund amount.
+      MinLength:
+        type: integer
+        format: int32
+        description: Minimum length of the card
+      MaxLength:
+        type: integer
+        format: int32
+        description: Maximum length of the card
+  BlockedCardRangeDto:
+    type: object
+    properties:
+      PrefixFrom:
+        type: string
+        description: Start of the prefix range
+      PrefixTo:
+        type: string
+        description: End of the prefix range
+  RefundMethodDto:
+    type: object
+    properties:
+      RefundMethodName:
+        type: string
+        description: Description of the method
+      RefundMethodID:
+        type: integer
+        format: int64
+        description: Method GB ID
+  RefundServiceDto:
+    type: object
+    description: Represents a refund service that is available for a desk
+    properties:
+      Name:
+        type: string
+        description: Description of the refund service
+      ServiceID:
+        type: integer
+        format: int64
+        description: Description of the refund service
+      ServiceType:
+        type: string
+        description: 'Type of the refund service (eg. Standard, VatOff, IRiS etc)'
+      AllowedRefundMethods:
+        type: array
+        description: Represents collection of refund target methods allowed for this client
+        items:
+          $ref: '#/definitions/RefundMethodDto'
+      MinimumPurchaseAmount:
+        type: number
+        format: double
+        description: The minimum purchase amount needed to issue a tax free transaction for this refund service
+  TravellerResponseDto:
+    type: object
+    description: Traveller details
+    allOf:
+    - $ref: '#/definitions/BaseResponseDto'
+    properties:
+      FirstName:
+        type: string
+      SecondName:
+        type: string
+      Email:
+        type: string
+      DateOfBirth:
+        type: string
+        format: date-time
+      IdentityCardNumber:
+        type: string
+        description: The document number of the travellers proof of identity
+      Passport:
+        $ref: '#/definitions/PassportDto'
+      Address:
+        $ref: '#/definitions/AddressDto'
+      TravelDetails:
+        $ref: '#/definitions/TravelDetailsDto'
+  TravellerDto:
+    type: object
+    description: Traveller details
+    allOf:
+    - $ref: '#/definitions/BaseResponseDto'
+    properties:
+      FirstName:
+        type: string
+      SecondName:
+        type: string
+      Email:
+        type: string
+      DateOfBirth:
+        type: string
+        format: date-time
+      IdentityCardNumber:
+        type: string
+        description: The document number of the travellers proof of identity
+      ProfileID:
+        type: integer
+        format: int64
+      IsIdentityChecked:
+        type: boolean
+        description:  Marks whether the identity of the Traveller was verified by the operator
+      Passport:
+        $ref: '#/definitions/PassportDto'
+      Address:
+        $ref: '#/definitions/AddressDto'
+      TravelDetails:
+        $ref: '#/definitions/TravelDetailsDto'
+  AddressDto:
+    type: object
+    description: Traveller address data
+    properties:
+      City:
+        type: string
+      Street:
+        type: string
+      State:
+        type: string
+      PostalCode:
+        type: string
+      CountryCode:
+        type: string
+      CountryName:
+        type: string
+  PassportDto:
+    type: object
+    description: Travellers passport data
+    properties:
+      Number:
+        type: string
+      CountryCode:
+        type: string
+      CountryName:
+        type: string
+  TravelDetailsDto:
+    type: object
+    properties:
+      DepartureDate:
+        type: string
+        format: date-time
+      ArrivalDate:
+        type: string
+        format: date-time
+      FinalDestinationCountryCode:
+        type: string
+      FinalDestinationCountryName:
+        type: string
+      PortOfEntry:
+        type: string
+  MerchantDetailsDto:
+    type: object
+    description:  Merchant details
+    properties:
+      Name:
+        type: string
+        description:  Merchant name
+      VATNumber:
+        type: string
+        description:  Merchant VAT number
+      CompanyID:
+        type: string
+        description:  Merchant's company ID
+      CompanyName:
+        type: string
+        description:  Merchant's company name
+      MerchantAddress:
+        $ref: '#/definitions/AddressDto'
+      CompanyAddress:
+        $ref: '#/definitions/AddressDto'
+  OperatorInfoDto:
+    type: object
+    description:  Contains information about the operator
+    properties:
+      ID:
+        type: string
+        description:  ID assigned by the merchant
+      Title:
+        type: string
+        description:  Title (Mr, Mrs)
+      FirstName:
+        type: string
+        description:  First name
+      LastName:
+        type: string
+        description:  Last name
+      IsTrainingMode:
+        type: boolean
+        description:  Is in training mode
+  CreateChequeDto:
+    type: object
+    properties:
+      ServiceID:
+        type: integer
+        format: int64
+        description: ID of the refund service to be used
+      Receipts:
+        type: array
+        items:
+          $ref: '#/definitions/ReceiptDto'
+      TravellerDetails:
+        $ref: '#/definitions/TravellerDto'
+      ShopInvoiceNumber:
+        type: string
+        description: Represents the consecutive shop invoice number which is a fiscal law requirement in some countries
+      SalesAssistantCode:
+        type: string
+        description: Identifies the sales assistant that confirmed the identity of the traveller in case AutoFill or eTFS is used
+  PaymentMethodDetailDto:
+    type: object
+    description:  Payment method used
+    properties:
+      Method:
+        type: string
+        description:  Method used
+        enum:
+          - Credit
+          - Cash
+          - Cheque
+          - Foreign
+          - Coupon
+          - Voucher
+          - TravellerCheck
+          - ManualCard
+          - Bancomat
+          - Other
+      Amount:
+        type: number
+        format: double
+        description:  Amount this payment method covers
+  TransactionTotalDto:
+    type: object
+    description:  Transaction total summary
+    properties:
+      NetAmount:
+        type: number
+        format: double
+        description:  Transaction net amount
+      GrossAmount:
+        type: number
+        format: double
+        description: Transaction gross amount
+      VATAmount:
+        type: number
+        format: double
+        description: Transaction VAT amount
+  ReceiptDto:
+    type: object
+    description: Contains the purchase details and receipt data
+    properties:
+      TransactionType:
+        type: string
+        description:  Transaction type
+        enum:
+          - Sale
+          - Refund
+      DateTime:
+        type: string
+        format: date-time
+        description:  Transaction date & time
+      ReceiptNumber:
+        type: string
+        description: Number of receipt/purchase/invoice
+      Barcode:
+        type: string
+        description:  Receipt barcode
+      FiscalNumber:
+        type: string
+        description:  string
+      TransactionTotal:
+        $ref: '#/definitions/TransactionTotalDto'
+      PaymentDetails:
+        $ref: '#/definitions/PaymentMethodDetailDto'
+      PurchaseItems:
+        type: array
+        items:
+          $ref: '#/definitions/PurchaseItemDto'
+        description: List of purchased items
+  ProductComponentDto:
+    type: object
+    description:  Contains common description structure data
+    properties:
+      Code:
+        type: string
+      Description:
+        type: string
+  ProductItemDetailsDto:
+    type: object
+    description:  Detailed information about the product
+    properties:
+      Family:
+        $ref: '#/definitions/ProductComponentDto'
+      Brand:
+        $ref: '#/definitions/ProductComponentDto'
+      Group:
+        $ref: '#/definitions/ProductComponentDto'
+      DiscountAmount:
+        type: number
+        format: double
+        description:  Discount amount, if given
+      VATCode:
+        type: string
+        description:  VAT code used
+      MerchandiseCategory:
+        type: string
+        description:  Merchandise category
+      MerchandiseCategoryDescription:
+        type: string
+        description:  Merchandise category description
+  PurchaseItemDto:
+    type: object
+    description: Describes the purchased item
+    properties:
+      VATRate:
+        type: number
+        format: double
+        description: VAT rate of the purchased item
+      VATAmount:
+        type: number
+        format: double
+        description: VAT amount of the purchased item
+      GrossAmount:
+        type: number
+        format: double
+        description: Gross amount of the purchased item
+      NetAmount:
+        type: number
+        format: double
+        description: Net amount of the purchased item
+      Quantity:
+        type: integer
+        format: int32
+        description: Amount of purchased items
+      UnitGrossAmount:
+        type: number
+        format: double
+        description: Gross amount per single purchased item
+      UnitNetAmount:
+        type: number
+        format: double
+        description: Net amount per single purchased item
+      UnitVATAmount:
+        type: number
+        format: double
+        description: VAT amount per single purchased item
+      GoodDescription:
+        type: string
+        description: Short description of purchased item
+      ProductCode:
+        type: string
+        description: Product code of purchased item
+      MeasurementUnit:
+        type: string
+        description: Measurement unit of purchased item
+      MeasurementUnitQuantity:
+        type: number
+        format: double
+        description: Quantity in measurement units
+      OriginalInvoiceBarcodeData:
+        type: string
+        description:  Original invoice barcode
+      Details:
+        $ref: '#/definitions/ProductItemDetailsDto'
+  RenderedChequeDto:
+    type: object
+    description: Rendered cheque details with print buffer
+    allOf:
+    - $ref: '#/definitions/BaseResponseDto'
+    properties:
+        NumericDocIdentifier:
+          type: string
+          description: Unique identifier of generated cheque document
+        TotalGrossAmount:
+          type: number
+          format: double
+          description: Total gross amount of all purchased items
+        TotalRefundAmount:
+          type: number
+          format: double
+          description: Total refund amount for all purchased items
+        ShopInvoiceNumber:
+          type: string
+          description: Represents the shop invoice number which is a fiscal law requirement in some countries
+        ChequePrinfBuffer:
+          type: string
+          description: Cheque document in prerendered format (base64)
+  ConsolidateChequesDto:
+    type: object
+    description: Consolidates generated cheques into one cheque
+    properties:
+      NumericDocIdentifiers:
+        type: array
+        description: List of generated cheques identifiers
+        items:
+          type: string
+  VoidChequeRequestDto:
+    type: object
+    description:  Contains the data of the cheque to bo voided
+    properties:
+      MerchantDetails:
+        $ref: '#/definitions/MerchantDetailsDto'
+      OperatorInfo:
+        $ref: '#/definitions/OperatorInfoDto'
+      Number:
+        type: string
+        description:  Cheque number
+      Barcode:
+        type: string
+        description:  Cheque barcode
+      TotalGrossAmount:
+        type: number
+        format: double
+        description:  Total gross amount of the transaction for which the cheque was created
+  ErrorDetailsDto:
+    type: object
+    description:  Detailed description of the error situation. All fields other than ErrorCode and Message are optional and are used to describe different situations
+    properties:
+      ErrorCode:
+        type: string
+        description:  Constant that defines the error
+      Message:
+        type: string
+        description:  Human readable description of the error
+      Property:
+        type: string
+        description:  Property in request that caused the problem
+      AttemptedValue:
+        type: string
+        description:  Value of the property that caused the problem
+  BaseResponseDto:
+    type: object
+    properties:
+      Result:
+        type: string
+        description:  Result of the action (SUCCESS or ERROR)
+      ErrorCode:
+        type: string
+        description:  Constant that defines the error
+      Message:
+        type: string
+        description:  Human readable description of the error
+      ErrorDetails:
+        type: array
+        description:  List of errors that occured during the execution of the request
+        items:
+          $ref: '#/definitions/ErrorDetailsDto'
